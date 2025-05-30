@@ -1,3 +1,12 @@
+hypothesis_logs/
+*.log
+logs/
+__pycache__/
+generated_hypotheses/
+function_calling_results/
+hypothesis_results/*
+AG4/*
+
  # Development Environment
 .env
 .env.*
@@ -125,6 +134,7 @@ infrastructure/terraform/services/crow-ui/environment.auto.tfvars
 .tmp/
 tmp/
 temp.ipynb
+output.txt
 
 # Playwright output
 playwright-report/
