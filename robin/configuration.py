@@ -59,10 +59,6 @@ def get_default_llm_config():
     return copy.deepcopy(_DEFAULT_LLM_CONFIG_DATA)
 
 
-DEFAULT_DISEASE_NAME = "dry age-related macular degeneration"
-DEFAULT_FOLDER_NAME = f"{DEFAULT_DISEASE_NAME[:70].replace(" ", "_")}_{datetime.now().strftime("%Y-%m-%d_%H-%M")}"
-
-
 def _get_prompt_args(template_string: str) -> set[str]:
     """
     Extracts root variable names from f-string like placeholders (e.g., {variable})
@@ -276,19 +272,30 @@ class RobinConfiguration(BaseModel):
         default=5, description="Number of candidates to generate for each query."
     )
     disease_name: str = Field(
-        default=DEFAULT_DISEASE_NAME, description="Name of the disease to focus on."
+        default="input_disease", description="Name of the disease to focus on."
     )
-    run_folder_name: str = Field(
-        default=DEFAULT_FOLDER_NAME,
-        description="Name of the folder where results will be stored.",
+    run_folder_name: str | None = Field(
+        default=None,
+        description=(
+            "Name of the folder where results will be stored. "
+            "If not provided or None, it will be auto-generated "
+            "using the disease_name and the timestamp."
+        ),
     )
-
     futurehouse_api_key: str = "insert_futurehouse_api_key_here"
     llm_name: str = "o4-mini"
     llm_config: dict | None = Field(default_factory=get_default_llm_config)
     agent_settings: AgentConfig = Field(default_factory=AgentConfig)
     _fh_client: FutureHouseClient | None = PrivateAttr(default=None)
     _llm_client: LiteLLMModel | None = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def set_run_folder_name_default(self) -> "RobinConfiguration":
+        if self.run_folder_name is None:
+            disease_part = self.disease_name[:70].replace(" ", "_")
+            timestamp_part = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            self.run_folder_name = f"{disease_part}_{timestamp_part}"
+        return self
 
     @property
     def fh_client(self) -> FutureHouseClient:
